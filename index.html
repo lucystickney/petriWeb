@@ -4,14 +4,36 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Persistent Color Grid</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Micro+5&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Micro+5&family=Recursive:wght@300..1000&display=swap" rel="stylesheet">
+
 </head>
 <body>
 
-    <button id="startButton">Start</button>
-    <p id="instructions">Click anywhere on petri dish to start growth</p>
-    <button id="stopButton">Start growth</button>
-    <canvas id="colorGrid" width="300" height="300"></canvas>
+   
+   
+    
+    <canvas id="colorGrid"></canvas>
+
+
+    
+    <div id="overlay" class="overlay">
+        <div class="popup">
+            <h2>Digital Petri</h2>
+            <p>Welcome to your virtual petri dish! Here, you can take 
+                care of and watch your pet petri grow. To start growth, 
+                you can touch anywhere in your petri to introduce bacteria 
+                to your dish. Remember, you can continue clicking even after 
+                growth has started.
+            </p>
+            <button id="startButton">Start Growing</button>
+        </div>
+    </div>
+
+
     <script src="grid.js"></script>
 </body>
 </html>

@@ -1,26 +1,55 @@
 const canvas = document.getElementById('colorGrid');
 const ctx = canvas.getContext('2d');
-const gridSize = 200; // Number of squares along one side of the grid
+const gridSize = 300; // Number of squares along one side of the grid
 let squareSize;
 let colors = [];    // colors of all indexes -> index of array is index of grid
 let activeSquares = []; // indexes of active mold
 let currentColor = randomColorArray();
 let isStarted = false;
+let surrounded = [];
 
-// keep track of indices that are active
-// in grow, look through all those, and find left, right, up and down indices
-    // check if those are in active, or out of bounds
-    // if their not, choose some randomly
-    // add them to colors
+let worker;
+const overlay = document.getElementById('overlay');
+const startButton = document.getElementById('startButton');
 
+// sets up background work
+if (window.Worker) {
+    // create a new worker
+    worker = new Worker('./worker.js');
+
+    // set up a listener for the worker
+    worker.onmessage = function(event) {
+        console.log("grow is called");
+        grow();
+    };
+
+
+    // Optional: Terminate the worker when not needed
+    // window.addEventListener('beforeunload', function() {
+    //     worker.terminate();
+    // });
+
+    startButton.addEventListener('click', () => {
+        isStarted = true;
+        overlay.style.display = 'none'; // Hide the start button after starting
+        worker.postMessage('start');
+        loadColors();
+        //stopButton.style.display = 'block'; // show stop button
+    });
+
+} else {
+    console.log('browser doesn’t support web workers.');
+}
+
+    
 // Function to resize the canvas
 function resizeCanvas() {
-    canvas.width = window.innerWidth;  // Set canvas width to window width
-    canvas.height = window.innerHeight; // Set canvas height to window height
+    canvas.width = window.innerWidth;  // set canvas width to window width
+    canvas.height = window.innerHeight; // set canvas height to window height
     squareSize = canvas.width / gridSize;
 }
 
-// TODO: have "start" button where user can click on starting squares
+
 // Function to calculate the clicked square and change its color
 function handleCanvasClick(event) {
     if (!isStarted) return; // Only respond to clicks if start button is clicked
@@ -35,29 +64,37 @@ function handleCanvasClick(event) {
     const row = Math.floor(y / squareSize);
     const index = row * gridSize + col; // finds index
 
-    // Change color of clicked square
-    colors[index] = rgbArrayToString(currentColor); // New color for clicked square
-    // add clicked to active array
-    activeSquares.push(index);
+    // if clicked square is not already a color
+    if (colors[index] === 'rgba(0, 255, 0, 0)') {
+        // Change color of clicked square
+        colors[index] = rgbArrayToString(currentColor); // new color for clicked square
+        // add clicked to active array
+        activeSquares.push(index);
+    }
+    
 }
 
-startButton.addEventListener('click', () => {
-    isStarted = true;
-    startButton.style.display = 'none'; // Hide the start button after starting
-    //stopButton.style.display = 'block'; // show stop button
-});
 
-stopButton.addEventListener('click', () => {
-    isStarted = false;
-    //startButton.style.display = 'none'; // Hide the start button after starting
-    stopButton.style.display = 'block'; // show stop button
-});
+
+// stopButton.addEventListener('click', () => {
+//     isStarted = false;
+//     //startButton.style.display = 'none'; // Hide the start button after starting
+//     stopButton.style.display = 'block'; // show stop button
+//     worker.postMessage('stop');
+// });
 
 // Load colors from localStorage or initialize a new array
 function loadColors() {
     // const savedColors = localStorage.getItem('gridColors');
+    
     // if (savedColors) {
+    //     //activeSquares = localStorage.getItem('actives');
+    //     console.log("colors are saved");
     //     colors = JSON.parse(savedColors);
+
+    //     // resend the background timer
+    //     worker.postMessage('start');
+
     // } else {
 
         // we want to start with a blank
@@ -70,8 +107,8 @@ function loadColors() {
 
         // colors[8070] = rgbArrayToString(currentColor);
         // activeSquares.push(8070);
+    // }
 }
-// }
 
 // start with all clear colors in colors or null
 // 
@@ -83,6 +120,10 @@ function loadColors() {
 // Save colors to localStorage
 function saveColors() {
     localStorage.setItem('gridColors', JSON.stringify(colors));
+}
+
+function saveActives() {
+    localStorage.setItem('actives', JSON.stringify(activeSquares));
 }
 
 // TODO: we want to generate a color that is similar to the previous random color. 
@@ -124,6 +165,11 @@ function updateColor() {
     } else {
         currentColor = [newR, newG, newB];
     }
+}
+
+// passed in is the index of the colors array
+function surroundingUpdateColor(index) {
+
 }
 
 // // Helper function to get a random variation
@@ -168,9 +214,12 @@ function drawGrid() {
 // take existing squares, and grow in each direction
 function grow() {
     const newActives = [];
-
+    //console.log("active length: ", activeSquares.length);
     // Loop over all currently active squares
     activeSquares.forEach(i => {
+        if (surrounded[i] === 1) {
+            return;
+        }
         // Calculate neighbors (left, right, up, down)
         const neighbors = [
             i - 1,               // Left
@@ -179,7 +228,9 @@ function grow() {
             i + gridSize         // Down
         ];
 
+
         // Filter valid neighbors
+        let neighborCount = 0;
         neighbors.forEach(j => {
             
             // Value is not in the array
@@ -195,6 +246,11 @@ function grow() {
                     newActives.push(j);
                     colors[j] = rgbArrayToString(currentColor);
                 }
+            } else {
+                neighborCount++;
+                if (neighborCount === 4) {
+                    surrounded[i] = 1;
+                }
             }
         
             // check if its already in active Squares
@@ -208,7 +264,16 @@ function grow() {
     activeSquares = [...activeSquares, ...newActives];
     updateColor();
     drawGrid();
+    saveColors();
+    saveActives();
+    if (activeSquares.length === gridSize * gridSize) {
+        worker.postMessage('stop');
+    }
 }
+
+// start worker
+
+
 
 // Call the resize function to set initial size
 resizeCanvas();
@@ -218,8 +283,10 @@ window.addEventListener('resize', resizeCanvas);
 
 
 // Initialize grid and set a timer for updates
-loadColors();
+//loadColors();
+
+
 //drawGrid();
 canvas.addEventListener('click', handleCanvasClick);
-setInterval(grow, 3600); // Update every hour (3600000 ms)
+//setInterval(grow, 3600); // Update every hour (3600000 ms)
 
