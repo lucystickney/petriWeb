@@ -34,6 +34,7 @@ if (window.Worker) {
     startButton.addEventListener('click', () => {
         isStarted = true;
         overlay.style.display = 'none'; // Hide the start button after starting
+        console.log('sending start message');
         worker.postMessage('start');
         loadColors();
         //stopButton.style.display = 'block'; // show stop button
