@@ -135,6 +135,14 @@ function randomColorArray() {
     return [r, g, b]; // Return as an array
 }
 
+
+function randomColorGreen() {
+    const r = Math.floor(Math.random() * 256); // Random value between 0-255
+    const g = Math.floor(Math.random() * 100); // Random value between 0-255
+    const b = Math.floor(Math.random() * 100); // Random value between 0-255
+    return [r, g, b]; // Return as an array
+}
+
 function rgbArrayToString(rgbArray) {
     if (rgbArray.length !== 3) {
         throw new Error("Input must be an array of three numbers representing RGB values.");
@@ -161,7 +169,8 @@ function updateColor() {
     const newB = clamp(b - variation, 0, 255);
 // Check if the color has reached its boundaries and consider resetting
     if (newR === 0 || newR === 255 || newG === 0 || newG === 255 || newB === 0 || newB === 255) {
-        currentColor = randomColorArray(); // Reset to a new random color
+        //currentColor = randomColorArray(); // Reset to a new random color
+        currentColor = randomColorArray();
     } else {
         currentColor = [newR, newG, newB];
     }
