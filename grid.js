@@ -14,6 +14,8 @@ const startButton = document.getElementById('startButton');
 
 // sets up background work
 if (window.Worker) {
+
+    console.log("window worker exists");
     // create a new worker
     worker = new Worker('worker.js');
 
