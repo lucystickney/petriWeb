@@ -15,7 +15,7 @@ const startButton = document.getElementById('startButton');
 // sets up background work
 if (window.Worker) {
     // create a new worker
-    worker = new Worker('./worker.js');
+    worker = new Worker('worker.js');
 
     // set up a listener for the worker
     worker.onmessage = function(event) {
